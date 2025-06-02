@@ -16,11 +16,11 @@ const {
   filtrarCartoes,
   removerCartaoDoEstoque,
 } = require("../functions/searchCard");
-const { criarPagamento, verificarPagamento } = require("../services/novaera");
+const { criarPagamento, verificarPagamento } = require("../services/blackpayments");
 const config = require("../config.json");
 
-const pesquisasPendentes = new Map();   // userId -> { resultados }
-const pagamentosPendentes = new Map();  // userId -> { transactionId, ... }
+const pesquisasPendentes = new Map();
+const pagamentosPendentes = new Map();
 
 async function darCargoComprador(interaction) {
   try {
@@ -67,7 +67,6 @@ function usuarioTemCompraPendente(userId) {
   return pendente && !pendente.pago && pendente.transactionId;
 }
 
-// Função só retorna os 6 primeiros dígitos do cartão
 function primeiros6(numero) {
   return (numero || '').slice(0, 6);
 }
@@ -390,11 +389,11 @@ CLASSIC - R$ 25
 
       const sorteado = cardsDaCategoria[Math.floor(Math.random() * cardsDaCategoria.length)];
       const cardObj = transformarEstoque({ [categoria]: [sorteado] })[0];
-      let valorPagamento = 4000;
+      let valorPagamento = 40;
       if (cardObj.preco && typeof cardObj.preco === "string" && cardObj.preco.match(/^\d+$/)) {
-        valorPagamento = parseInt(cardObj.preco, 10) * 100;
+        valorPagamento = parseInt(cardObj.preco, 10);
       } else if (cardObj.preco && typeof cardObj.preco === "string" && cardObj.preco.startsWith("R$")) {
-        valorPagamento = parseInt(cardObj.preco.replace(/[^\d]/g, ""), 10) * 100;
+        valorPagamento = parseInt(cardObj.preco.replace(/[^\d]/g, ""), 10);
       }
 
       try {
@@ -403,10 +402,10 @@ CLASSIC - R$ 25
         const embedPagamento = new EmbedBuilder()
           .setTitle("💸 PAGAMENTO GERADO")
           .setDescription(
-            `Valor: R$ ${(valorPagamento / 100).toFixed(2).replace(".", ",")}\n\nEscaneie o QR Code abaixo ou aguarde para copiar a chave Pix na próxima mensagem.`
+            `Valor: R$ ${valorPagamento},00\n\nEscaneie o QR Code abaixo ou aguarde para copiar a chave Pix na próxima mensagem.`
           )
           .setImage(
-            `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(pagamento.pixCopyPaste)}&size=200x200`
+            pagamento.pixUrl || `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(pagamento.pixCopyPaste)}&size=200x200`
           )
           .setColor("#8a00ff")
           .setFooter({ text: "O pagamento expira em 5 minutos." });
@@ -502,6 +501,7 @@ CLASSIC - R$ 25
 
         return true;
       } catch (err) {
+        console.error("ERRO AO GERAR PAGAMENTO:", err);
         await interaction.editReply({
           content: "❌ Ocorreu um erro ao gerar o pagamento. Tente novamente mais tarde.",
         });
@@ -527,11 +527,11 @@ CLASSIC - R$ 25
         return true;
       }
       const cardObj = pendentePesquisa.resultados[index];
-      let valorPagamento = 4000;
+      let valorPagamento = 40;
       if (cardObj.preco && typeof cardObj.preco === "string" && cardObj.preco.match(/^\d+$/)) {
-        valorPagamento = parseInt(cardObj.preco, 10) * 100;
+        valorPagamento = parseInt(cardObj.preco, 10);
       } else if (cardObj.preco && typeof cardObj.preco === "string" && cardObj.preco.startsWith("R$")) {
-        valorPagamento = parseInt(cardObj.preco.replace(/[^\d]/g, ""), 10) * 100;
+        valorPagamento = parseInt(cardObj.preco.replace(/[^\d]/g, ""), 10);
       }
 
       try {
@@ -540,10 +540,10 @@ CLASSIC - R$ 25
         const embedPagamento = new EmbedBuilder()
           .setTitle("💸 PAGAMENTO GERADO")
           .setDescription(
-            `Valor: R$ ${(valorPagamento / 100).toFixed(2).replace(".", ",")}\n\nEscaneie o QR Code abaixo ou aguarde para copiar a chave Pix na próxima mensagem.`
+            `Valor: R$ ${valorPagamento},00\n\nEscaneie o QR Code abaixo ou aguarde para copiar a chave Pix na próxima mensagem.`
           )
           .setImage(
-            `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(pagamento.pixCopyPaste)}&size=200x200`
+            pagamento.pixUrl || `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(pagamento.pixCopyPaste)}&size=200x200`
           )
           .setColor("#8a00ff")
           .setFooter({ text: "O pagamento expira em 5 minutos." });
@@ -639,6 +639,7 @@ CLASSIC - R$ 25
 
         return true;
       } catch (err) {
+        console.error("ERRO AO GERAR PAGAMENTO:", err);
         await interaction.editReply({
           content: "❌ Ocorreu um erro ao gerar o pagamento. Tente novamente mais tarde.",
         });
@@ -738,6 +739,7 @@ CLASSIC - R$ 25
 
       return true;
     } catch (err) {
+      console.error("ERRO AO PROCESSAR MODAL DE BUSCA:", err);
       await interaction.editReply({
         content: "Erro inesperado ao processar a busca.",
       });
