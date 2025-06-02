@@ -198,9 +198,9 @@ module.exports = {
     }
   },
 
-  // CORRIGIDO: NUNCA USE REPLY/DEFER ANTES DE SHOWMODAL
   async handleSelectMenu(interaction) {
-    if (interaction.customId !== "select_categoria_remover") return;
+    // Só trata o select do estoque!
+    if (interaction.customId !== "select_categoria_remover") return false;
 
     // NUNCA reply/deferReply antes de showModal!
     const categoria = interaction.values[0];
@@ -231,7 +231,8 @@ module.exports = {
       new ActionRowBuilder().addComponents(cartoesInput)
     );
 
-    return interaction.showModal(modal);
+    await interaction.showModal(modal);
+    return true;
   },
 
   async handleModal(interaction) {
