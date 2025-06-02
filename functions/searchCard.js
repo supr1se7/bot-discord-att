@@ -1,89 +1,43 @@
-const fs = require('fs');
-const path = require('path');
+function transformarEstoque(rawEstoque) {
+  // rawEstoque: { categoria: [ "numero|mes|ano|cvv|bandeira|banco|level|preco", ... ] }
+  // Retorna array de objetos
+  const result = [];
+  for (const cat in rawEstoque) {
+    for (const linha of rawEstoque[cat]) {
+      const [numero, mes, ano, cvv, bandeira, banco, level, preco] = linha.split("|").map(s => s.trim());
+      result.push({ 
+        numero, mes, ano, cvv, bandeira, banco, level, preco: preco?.replace(/^R\$ ?/, '') || '', categoria: cat
+      });
+    }
+  }
+  return result;
+}
 
 function carregarEstoque() {
-  try {
-    const estoquePath = path.resolve(__dirname, '../estoque.json');
-    const raw = fs.readFileSync(estoquePath, 'utf-8');
-    return JSON.parse(raw);
-  } catch (e) {
-    console.error('❌ Erro ao carregar estoque.json:', e);
-    return {};
-  }
+  const fs = require('fs');
+  const path = require('path');
+  const estoquePath = path.resolve(__dirname, '../estoque.json');
+  if (!fs.existsSync(estoquePath))
+    fs.writeFileSync(estoquePath, JSON.stringify({}, null, 2));
+  return JSON.parse(fs.readFileSync(estoquePath, 'utf-8'));
 }
 
-function transformarEstoque(rawEstoque) {
-  const todasCategorias = Object.values(rawEstoque).flat();
-
-  return todasCategorias.map(str => {
-    const partes = str.split('|').map(s => s.trim());
-
-    // Caso antigo: campo 7 contém level e preço juntos
-    if (partes.length === 7) {
-      const levelMatch = partes[6].match(/(.+?)\s*R\$ ?([\d.,]+)/i);
-      let level = partes[6], precoStr = '';
-      if (levelMatch) {
-        level = levelMatch[1].trim();
-        precoStr = 'R$ ' + levelMatch[2];
-      }
-      partes[6] = level;
-      partes[7] = precoStr;
-    }
-
-    if (partes.length < 8) return null;
-
-    const [numero, mes, ano, cvv, bandeira, banco, level, precoStr] = partes;
-
-    // Aceita vírgula ou ponto como separador decimal
-    const precoMatch = (precoStr || '').match(/R\$ ?([\d.,]+)/i);
-    let preco = 0;
-    if (precoMatch) {
-      preco = parseFloat(precoMatch[1].replace(',', '.'));
-    }
-
-    return {
-      numero: numero ? numero.trim() : '',
-      mes: mes ? mes.trim() : '',
-      ano: ano ? ano.trim() : '',
-      cvv: cvv ? cvv.trim() : '',
-      bandeira: bandeira ? bandeira.trim().toLowerCase() : '',
-      banco: banco ? banco.trim().toLowerCase() : '',
-      saldo: preco,
-      level: level ? level.trim().toLowerCase() : '',
-      preco
-    };
-  }).filter(Boolean);
-}
-
-// Pesquisa flexível: aceita parcial, ignora maiúsculas/minúsculas e acentos
-function filtrarCartoes(campo, valor, estoque) {
-  const valorSearch = removerAcentos(valor.trim().toLowerCase());
-
+function filtrarCartoes(campo, valorBusca, estoque) {
+  // estoque: array de objetos já transformados
   return estoque.filter(cartao => {
-    let campoValor = cartao[campo] || '';
-    campoValor = removerAcentos(String(campoValor).trim().toLowerCase());
-    if (!campoValor) return false;
-    // Para BIN (numero), exige começo igual; para outros campos, busca parcial
-    if (campo === "numero") {
-      return campoValor.startsWith(valorSearch);
-    }
-    return campoValor.includes(valorSearch);
+    if (!cartao[campo]) return false;
+    return cartao[campo].toLowerCase().includes(valorBusca.toLowerCase());
   });
 }
 
-// Remove acentos para facilitar busca flexível
-function removerAcentos(str) {
-  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-}
-
-function mascararNumero(num) {
-  if (!num) return 'Número inválido';
-  return num.slice(0, 6) + '******';
+function mascararNumero(numero) {
+  if (!numero || numero.length < 8) return numero;
+  return numero.slice(0, 4) + " **** **** " + numero.slice(-4);
 }
 
 module.exports = {
-  carregarEstoque,
   transformarEstoque,
+  carregarEstoque,
   filtrarCartoes,
   mascararNumero
 };

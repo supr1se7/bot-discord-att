@@ -35,7 +35,7 @@ async function darCargoComprador(interaction) {
         new EmbedBuilder()
           .setTitle("🎉 Cargo de comprador atribuído")
           .setDescription(`O usuário <@${interaction.user.id}> recebeu o cargo de comprador após compra.`)
-          .setColor("#4caf50")
+          .setColor("#8a00ff")
           .setTimestamp()
       );
     }
@@ -68,7 +68,6 @@ function usuarioTemCompraPendente(userId) {
   return pendente && !pendente.pago && pendente.transactionId;
 }
 
-// Mostra o painel fixo para sempre no canal (não ephemeral, qualquer um pode interagir)
 async function enviarPainel(interaction) {
  const embedComprar = new EmbedBuilder()
   .setTitle("‎Bem-vindo à Legacy CC's")
@@ -83,7 +82,7 @@ async function enviarPainel(interaction) {
   )
   .setColor("#8a00ff")
   .setImage(
-    "https://media.discordapp.net/attachments/1376759989749813298/1378865998202933318/2025-06-01_18.38.00.jpg?ex=683e2888&is=683cd708&hm=bac1a9423b1eec683d202026536dec9ed8809f101e8042d0dcf3c5240a95540e&=&format=webp",
+    "https://media.discordapp.net/attachments/1376759989749813298/1378865998202933318/2025-06-01_18.38.00.jpg?ex=683e2888&is=683cd708&hm=bac1a9423b1eec683d202026536dec9ed8809f101e8042d0dcf3c5240a95540d&"
   )
   .setFooter({
     text: "ESTOQUE ATUALIZADO — COMPRE AGORA E GARANTA RESULTADOS",
@@ -118,7 +117,7 @@ module.exports = {
       new EmbedBuilder()
         .setTitle("🔎 Painel aberto")
         .setDescription(`Usuário <@${interaction.user.id}> abriu o painel de compra no canal <#${interaction.channel.id}> (${interaction.channel.name})`)
-        .setColor("#00bcd4")
+        .setColor("#8a00ff")
         .setTimestamp()
     );
 
@@ -130,13 +129,12 @@ module.exports = {
     });
   },
 
-  // Botão principal do painel
-async handleButton(interaction) {
-  if (interaction.customId === "abrir_compras") {
-    const embedPesquisa = new EmbedBuilder()
-      .setTitle("🔍 Comprar CC Unitária")
-      .setDescription(
-        `🏷 Tabela de Preços
+  async handleButton(interaction) {
+    if (interaction.customId === "abrir_compras") {
+      const embedPesquisa = new EmbedBuilder()
+        .setTitle("🔍 Comprar CC Unitária")
+        .setDescription(
+          `🏷 Tabela de Preços
 
 AMEX - R$ 80
 INFINITE - R$ 60
@@ -147,59 +145,59 @@ GOLD - R$ 35
 STANDARD - R$ 30
 CLASSIC - R$ 25
 `
-      )
-      .setColor("#8a00ff")
-      .setThumbnail("https://media.discordapp.net/attachments/1376759989749813298/1378876103019597874/photo_2025-05-23_19.12.42.jpeg?ex=683e31f1&is=683ce071&hm=5fec7708f9218425174a7bf8791e5fcb25f988f05700624955d523d46bc36f43&=&format=webp")
-      .setFooter({
-        text: "Selecione uma categoria para comprar CC.",
+        )
+        .setColor("#8a00ff")
+        .setThumbnail("https://media.discordapp.net/attachments/1376759989749813298/1378876103019597874/photo_2025-05-23_19.12.42.jpeg?ex=683e31f1&is=683ce071&hm=5fec7708f9218425174a7bf8791e5fcb25f988f0a7f86a7d09d87f64b0809e87b&")
+        .setFooter({
+          text: "Selecione uma categoria para comprar CC.",
+        });
+
+      const menuPesquisa = new StringSelectMenuBuilder()
+        .setCustomId("menu_painel")
+        .setPlaceholder("Selecione um método de pesquisa")
+        .addOptions([
+          {
+            label: "Pesquisar por BIN",
+            value: "pesquisar_bin",
+            emoji: "🔢"
+          },
+          {
+            label: "Pesquisar por Banco",
+            value: "pesquisar_banco",
+            emoji: "🏦"
+          },
+          {
+            label: "Pesquisar por Bandeira",
+            value: "pesquisar_bandeira",
+            emoji: "🇧🇷"
+          },
+          {
+            label: "Pesquisar por Level",
+            value: "pesquisar_level",
+            emoji: "🥇"
+          },
+          {
+            label: "Unitárias",
+            value: "unitarias",
+            emoji: "💳"
+          }
+        ]);
+
+      const rowPesquisa = new ActionRowBuilder().addComponents(menuPesquisa);
+
+      await interaction.reply({
+        embeds: [embedPesquisa],
+        components: [rowPesquisa],
+        ephemeral: true,
       });
+      return true;
+    }
 
-    const menuPesquisa = new StringSelectMenuBuilder()
-      .setCustomId("menu_painel")
-      .setPlaceholder("Selecione um método de pesquisa")
-      .addOptions([
-        {
-          label: "Pesquisar por BIN",
-          value: "pesquisar_bin",
-          emoji: "🔢"
-        },
-        {
-          label: "Pesquisar por Banco",
-          value: "pesquisar_banco",
-          emoji: "🏦"
-        },
-        {
-          label: "Pesquisar por Bandeira",
-          value: "pesquisar_bandeira",
-          emoji: "🇧🇷"
-        },
-        {
-          label: "Pesquisar por Level",
-          value: "pesquisar_level",
-          emoji: "🥇"
-        },
-        {
-          label: "Unitárias",
-          value: "unitarias",
-          emoji: "💳"
-        }
-      ]);
-
-    const rowPesquisa = new ActionRowBuilder().addComponents(menuPesquisa);
-
-    await interaction.reply({
-      embeds: [embedPesquisa],
-      components: [rowPesquisa],
-      ephemeral: true,
-    });
-    return true;
-  }
-
-if (interaction.customId === "termos_troca") {
-  const embedTermos = new EmbedBuilder()
-    .setTitle("📜 Termos de Troca & Garantia")
-    .setDescription(
-      `Você precisa enviar um vídeo mostrando:
+    if (interaction.customId === "termos_troca") {
+      const embedTermos = new EmbedBuilder()
+        .setTitle("📜 Termos de Troca & Garantia")
+        .setDescription(
+          `Você precisa enviar um vídeo mostrando:
 • A data e hora no site da Magalu ou Tramontina;
 • A tentativa de compra de um produto até R$150;
 • Tudo isso dentro do prazo de 10 minutos após a liberação da info.
@@ -211,15 +209,15 @@ Se o vídeo ou o contato não forem enviados dentro do prazo, não será feita a
 Compre apenas se estiver de acordo com essas condições. Caso contrário, por favor, não compre!
 
 **💬 | Caso necessite de alguma ajuda, abra ticket <#1375627890556801108>**`
-    )
-    .setColor("#8a00ff");
-  await interaction.reply({
-    embeds: [embedTermos],
-    ephemeral: true,
-  });
-  return true;
-}
-    // O resto do fluxo mantém igual (cancelar compra, etc)
+        )
+        .setColor("#8a00ff");
+      await interaction.reply({
+        embeds: [embedTermos],
+        ephemeral: true,
+      });
+      return true;
+    }
+
     if (interaction.customId === "cancelar_compra") {
       const pendente = pagamentosPendentes.get(interaction.user.id);
       if (!pendente || pendente.pago === true) {
@@ -248,7 +246,6 @@ Compre apenas se estiver de acordo com essas condições. Caso contrário, por f
     return false;
   },
 
-  // Seleção do menu de pesquisa
   async handleSelect(interaction) {
     if (interaction.customId === "menu_painel") {
       const escolha = interaction.values[0];
@@ -257,7 +254,7 @@ Compre apenas se estiver de acordo com essas condições. Caso contrário, por f
         const rawEstoque = await carregarEstoque();
         const categorias = Object.keys(rawEstoque);
 
-const tabelaPrecos = `
+        const tabelaPrecos = `
 🏷 Tabela de Preços
 
 AMEX - R$ 80
@@ -269,14 +266,13 @@ GOLD - R$ 35
 STANDARD - R$ 30
 CLASSIC - R$ 25
 
-
 `;
 
-const embedUnitarias = new EmbedBuilder()
-  .setTitle("💳 Comprar CC Unitária")
-  .setDescription(tabelaPrecos)
-  .setColor("#8a00ff")
-  .setFooter({ text: "Selecione uma categoria para comprar CC." });
+        const embedUnitarias = new EmbedBuilder()
+          .setTitle("💳 Comprar CC Unitária")
+          .setDescription(tabelaPrecos)
+          .setColor("#8a00ff")
+          .setFooter({ text: "Selecione uma categoria para comprar CC." });
 
         const selectCategorias = new StringSelectMenuBuilder()
           .setCustomId("unitarias_categoria")
@@ -318,6 +314,7 @@ const embedUnitarias = new EmbedBuilder()
       return true;
     }
 
+    // Compra unitária por categoria
     if (interaction.customId === "unitarias_categoria") {
       if (usuarioTemCompraPendente(interaction.user.id)) {
         await logAdmin(
@@ -347,6 +344,7 @@ const embedUnitarias = new EmbedBuilder()
         return true;
       }
 
+      // Sorteia cartão e faz o parsing completo
       const sorteado = cardsDaCategoria[Math.floor(Math.random() * cardsDaCategoria.length)];
       const cardObj = transformarEstoque({ [categoria]: [sorteado] })[0];
       const valorPagamento = cardObj.preco ? Math.round(cardObj.preco * 100) : 4000;
@@ -374,16 +372,17 @@ const embedUnitarias = new EmbedBuilder()
           .setTimestamp()
         );
 
+        // PRIMEIRA mensagem: embed com QR Code
         const embedPagamento = new EmbedBuilder()
           .setTitle("💸 PAGAMENTO GERADO")
           .setDescription(
-            `✅ **CHAVE PIX:**\n\`\`\`${pagamento.pixCopyPaste}\`\`\`\nValor: R$ ${(valorPagamento / 100).toFixed(2).replace(".", ",")}\n\nEscaneie o QR Code ou copie o PIX acima para efetuar o pagamento.`
+            `Valor: R$ ${(valorPagamento / 100).toFixed(2).replace(".", ",")}\n\nEscaneie o QR Code abaixo ou aguarde para copiar a chave Pix na próxima mensagem.`
           )
           .setImage(
             `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(pagamento.pixCopyPaste)}&size=200x200`
           )
           .setColor("#8a00ff")
-          .setFooter({ text: "O pagamento expira em 2 minutos." });
+          .setFooter({ text: "O pagamento expira em 5 minutos." });
 
         const cancelarButton = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
@@ -392,9 +391,18 @@ const embedUnitarias = new EmbedBuilder()
             .setStyle(ButtonStyle.Danger)
         );
 
-        await interaction.reply({ embeds: [embedPagamento], components: [cancelarButton], ephemeral: true });
+        await interaction.reply({
+          embeds: [embedPagamento],
+          components: [cancelarButton],
+          ephemeral: true,
+        });
 
-        pendente.timeoutId = criarTimeoutPagamento(interaction, 120000, async () => {
+     await interaction.followUp({
+  content: `${pagamento.pixCopyPaste}`,
+  ephemeral: true,
+});
+        // 5 minutos = 300.000 ms
+        pendente.timeoutId = criarTimeoutPagamento(interaction, 300000, async () => {
           await logAdmin(interaction, new EmbedBuilder()
             .setTitle("⏰ PAGAMENTO EXPIRADO")
             .setDescription(
@@ -414,7 +422,7 @@ const embedUnitarias = new EmbedBuilder()
 
         let tempoPassado = 0;
         const intervalo = 10000;
-        const tempoMaximo = 120000;
+        const tempoMaximo = 300000;
         const checarPagamento = async () => {
           const isPaid = await verificarPagamento(pagamento.id);
           if (isPaid) {
@@ -422,176 +430,30 @@ const embedUnitarias = new EmbedBuilder()
             clearTimeout(pendente.timeoutId);
             removerCartaoDoEstoque(cardObj.numero);
             await interaction.followUp({
-              content: `💳 Pagamento confirmado! Aqui estão os detalhes do seu cartão:\n\n\`${cardObj.numero}\`\nBanco: ${cardObj.banco}\nBandeira: ${cardObj.bandeira}\nLevel: ${cardObj.level}`,
+              content:
+                `💳 **Pagamento confirmado! Aqui estão os detalhes completos do seu cartão:**\n\n` +
+                `**Número:** \`${cardObj.numero}\`\n` +
+                `**Validade:** \`${cardObj.mes}/${cardObj.ano}\`\n` +
+                `**CVV:** \`${cardObj.cvv}\`\n` +
+                `**Bandeira:** ${cardObj.bandeira}\n` +
+                `**Banco:** ${cardObj.banco}\n` +
+                `**Level:** ${cardObj.level}\n` +
+                (cardObj.preco ? `**Preço:** R$ ${cardObj.preco}\n` : '') +
+                (cardObj.categoria ? `**Categoria:** ${cardObj.categoria}\n` : ''),
               ephemeral: true,
             });
             await logAdmin(interaction, new EmbedBuilder()
               .setTitle("✅ PAGAMENTO CONFIRMADO")
               .setDescription(
                 `Usuário <@${interaction.user.id}> PAGOU e recebeu o cartão:\n` +
-                `\`${cardObj.numero}\`\n` +
-                `Valor: R$ ${(valorPagamento / 100).toFixed(2).replace(".", ",")}\n` +
+                `\`${cardObj.numero}\`/${cardObj.mes}/${cardObj.ano}|${cardObj.cvv}\n` +
+                `Valor: R$ ${cardObj.preco}\n` +
                 `Cargo de comprador atribuído.`
               )
               .setColor("#4caf50")
               .setTimestamp()
             );
             await darCargoComprador(interaction);
-            pagamentosPendentes.delete(interaction.user.id);
-          } else {
-            tempoPassado += intervalo;
-            if (tempoPassado < tempoMaximo && pagamentosPendentes.get(interaction.user.id)) {
-              setTimeout(checarPagamento, intervalo);
-            }
-          }
-        };
-        setTimeout(checarPagamento, intervalo);
-
-      } catch (err) {
-        await logAdmin(
-          interaction,
-          new EmbedBuilder()
-            .setTitle("❌ ERRO AO GERAR PAGAMENTO")
-            .setDescription(`Usuário <@${interaction.user.id}> tentou comprar mas ocorreu erro: ${err.message || err}`)
-            .setColor("#ff0000")
-            .setTimestamp()
-        );
-        await interaction.reply({
-          content: "❌ Ocorreu um erro ao gerar o pagamento. Tente novamente mais tarde.",
-          ephemeral: true,
-        });
-      }
-      return true;
-    }
-
-    if (interaction.customId === "selecionar_cartao") {
-      if (usuarioTemCompraPendente(interaction.user.id)) {
-        await logAdmin(
-          interaction,
-          new EmbedBuilder()
-            .setTitle("⚠️ COMPRA BLOQUEADA (PIX PENDENTE)")
-            .setDescription(`Usuário <@${interaction.user.id}> tentou iniciar nova compra mas já tem pagamento Pix pendente.`)
-            .setColor("#ff9800")
-            .setTimestamp()
-        );
-        await interaction.reply({ content: "Você já possui uma compra pendente! Aguarde o pagamento ou o tempo expirar.", ephemeral: true });
-        return true;
-      }
-      const idxSelecionado = parseInt(interaction.values[0], 10);
-      const pendentePesquisa = pesquisasPendentes.get(interaction.user.id);
-
-      if (
-        !pendentePesquisa ||
-        !pendentePesquisa.resultados ||
-        !pendentePesquisa.resultados[idxSelecionado]
-      ) {
-        await logAdmin(
-          interaction,
-          new EmbedBuilder()
-            .setTitle("❌ SELEÇÃO INVÁLIDA")
-            .setDescription(`Usuário <@${interaction.user.id}> tentou selecionar um cartão inválido ou sessão expirada.`)
-            .setColor("#f44336")
-            .setTimestamp()
-        );
-        await interaction.reply({
-          content: "Cartão inválido ou sessão expirada.",
-          ephemeral: true,
-        });
-        return true;
-      }
-
-      const cartaoSelecionado = pendentePesquisa.resultados[idxSelecionado];
-      const valorPagamento = cartaoSelecionado.preco
-        ? Math.round(cartaoSelecionado.preco * 100)
-        : 4000;
-
-      try {
-        const pagamento = await criarPagamento(valorPagamento);
-
-        const pendente = {
-          transactionId: pagamento.id,
-          cartao: cartaoSelecionado,
-          pix: { qrcode: pagamento.pixCopyPaste, secureUrl: pagamento.pixUrl },
-          pago: false
-        };
-        pagamentosPendentes.set(interaction.user.id, pendente);
-
-        await logAdmin(interaction, new EmbedBuilder()
-          .setTitle("🤑 PAGAMENTO GERADO")
-          .setDescription(
-            `Usuário <@${interaction.user.id}> gerou um pagamento Pix.\n` +
-            `**Valor:** R$ ${(valorPagamento / 100).toFixed(2).replace(".", ",")}\n` +
-            `**Cartão/categoria:** ${cartaoSelecionado.numero}\n` +
-            `ID Transação: ${pagamento.id}`
-          )
-          .setColor("#ffa500")
-          .setTimestamp()
-        );
-
-        const embedPagamento = new EmbedBuilder()
-          .setTitle("💸 PAGAMENTO GERADO")
-          .setDescription(
-            `✅ **CHAVE PIX:**\n\`\`\`${pagamento.pixCopyPaste}\`\`\`\nValor: R$ ${(valorPagamento / 100).toFixed(2).replace(".", ",")}\n\nEscaneie o QR Code ou copie o PIX acima para efetuar o pagamento.`
-          )
-          .setImage(
-            `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(pagamento.pixCopyPaste)}&size=200x200`
-          )
-          .setColor("#8a00ff")
-          .setFooter({ text: "O pagamento expira em 2 minutos." });
-
-        const cancelarButton = new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId("cancelar_compra")
-            .setLabel("❌ Cancelar Compra")
-            .setStyle(ButtonStyle.Danger)
-        );
-
-        await interaction.reply({ embeds: [embedPagamento], components: [cancelarButton], ephemeral: true });
-
-        pendente.timeoutId = criarTimeoutPagamento(interaction, 120000, async () => {
-          await logAdmin(interaction, new EmbedBuilder()
-            .setTitle("⏰ PAGAMENTO EXPIRADO")
-            .setDescription(
-              `O usuário <@${interaction.user.id}> NÃO confirmou o pagamento dentro do prazo.\n` +
-                `**Valor:** R$ ${(valorPagamento / 100).toFixed(2).replace(".", ",")}\n` +
-                `**Cartão/categoria:** ${cartaoSelecionado.numero}`
-            )
-            .setColor("#8a00ff").setTimestamp());
-          try {
-            await interaction.followUp({
-              content: "❌ O pagamento não foi confirmado dentro do tempo. Por favor, tente novamente.",
-              ephemeral: true,
-            });
-          } catch {}
-        });
-
-        let tempoPassado = 0;
-        const intervalo = 10000;
-        const tempoMaximo = 120000;
-        const checarPagamento = async () => {
-          const isPaid = await verificarPagamento(pagamento.id);
-          if (isPaid) {
-            pendente.pago = true;
-            clearTimeout(pendente.timeoutId);
-            removerCartaoDoEstoque(cartaoSelecionado.numero);
-
-            await interaction.followUp({
-              content: `💳 Pagamento confirmado! Aqui estão os detalhes do seu cartão:\n\n\`${cartaoSelecionado.numero}\`\nBanco: ${cartaoSelecionado.banco}\nBandeira: ${cartaoSelecionado.bandeira}\nLevel: ${cartaoSelecionado.level}`,
-              ephemeral: true,
-            });
-            await logAdmin(interaction, new EmbedBuilder()
-              .setTitle("✅ PAGAMENTO CONFIRMADO")
-              .setDescription(
-                `Usuário <@${interaction.user.id}> PAGOU e recebeu o cartão:\n` +
-                `\`${cartaoSelecionado.numero}\`\n` +
-                `Valor: R$ ${(valorPagamento / 100).toFixed(2).replace(".", ",")}\n` +
-                `Cargo de comprador atribuído.`
-              )
-              .setColor("#4caf50")
-              .setTimestamp()
-            );
-            await darCargoComprador(interaction);
-
             pagamentosPendentes.delete(interaction.user.id);
           } else {
             tempoPassado += intervalo;
@@ -686,7 +548,7 @@ const embedUnitarias = new EmbedBuilder()
 
       const descricoes = resultados
         .map((cartao, i) => {
-          return `\`${i}\` - **${cartao.numero ? mascararNumero(cartao.numero) : "N/D"}** - Banco: ${cartao.banco || "N/D"} - Bandeira: ${cartao.bandeira || "N/D"} - Level: ${cartao.level || "N/D"} - R$ ${cartao.preco || "N/D"}`;
+          return `\`${i}\` - **${cartao.numero ? mascararNumero(cartao.numero) : "N/D"}** - Banco: ${cartao.banco || "N/D"} - Bandeira: ${cartao.bandeira || "N/D"} - Level: ${cartao.level || "N/D"} - Preço: R$ ${cartao.preco || "N/D"}`;
         })
         .slice(0, 20);
 

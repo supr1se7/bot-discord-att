@@ -17,7 +17,6 @@ const statusList = [
   { name: 'Consultando BINs', type: ActivityType.Watching },
   { name: 'Adicionando estoque', type: ActivityType.Playing },
   { name: 'Verificando saldo de cartões', type: ActivityType.Watching },
-  { name: 'Painel de CC FULL', type: ActivityType.Playing },
   { name: 'Garantindo qualidade', type: ActivityType.Playing },
 
 ];
@@ -25,7 +24,7 @@ const statusList = [
 client.once('ready', () => {
   console.log(`🔥 BOT ONLINE COMO ${client.user.tag} | Status: ${statusList[0].name}`);
 
-  // Troca o status a cada 15 segundos
+  
   let i = 0;
   setInterval(() => {
     const status = statusList[i % statusList.length];
