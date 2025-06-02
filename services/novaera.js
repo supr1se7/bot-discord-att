@@ -7,7 +7,7 @@ async function criarPagamento(valorCentavos) {
     items: [
       {
         title: "Produto Exemplo",
-        unitPrice: valorCentavos / 100, // em reais, aceita centavos (ex: 0.01)
+        unitPrice: valorCentavos, // em centavos, inteiro
         quantity: 1,
         tangible: false,
       },

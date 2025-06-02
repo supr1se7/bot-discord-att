@@ -19,9 +19,11 @@ function lerEstoque() {
     fs.writeFileSync(estoquePath, JSON.stringify({}, null, 2));
   return JSON.parse(fs.readFileSync(estoquePath, "utf-8"));
 }
+
 function salvarEstoque(estoque) {
   fs.writeFileSync(estoquePath, JSON.stringify(estoque, null, 2));
 }
+
 function criarBotoesPainel() {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
@@ -46,11 +48,12 @@ function criarBotoesPainel() {
       .setStyle(ButtonStyle.Secondary)
   );
 }
+
 function sanitizeCartaoInput(text) {
   return text
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => line.length > 5)
+    .filter((line) => line.length > 10)
     .join("\n");
 }
 
@@ -84,7 +87,7 @@ module.exports = {
     await interaction.reply({
       embeds: [criarEmbedEstoque(estoque)],
       components: [criarBotoesPainel()],
-      ephemeral: true,
+      flags: 64, // ephemeral
     });
   },
 
@@ -100,6 +103,7 @@ module.exports = {
     )
       return;
 
+    // NÃO USE REPLY/DEFER ANTES DE SHOWMODAL NUNCA!
     if (interaction.customId === "adicionar") {
       const modal = new ModalBuilder()
         .setCustomId("modal_add")
@@ -109,7 +113,7 @@ module.exports = {
         .setCustomId("categoria")
         .setLabel("Categoria")
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder("Ex: classic, standard")
+        .setPlaceholder("Ex: classic, platinum")
         .setRequired(true);
 
       const cartaoInput = new TextInputBuilder()
@@ -117,7 +121,7 @@ module.exports = {
         .setLabel("Cartão(s) (um por linha)")
         .setStyle(TextInputStyle.Paragraph)
         .setPlaceholder(
-          "Ex: 1234567890123456|01|2030|153|MASTERCARD|ITAU UNIBANCO, S.A.|BLACK"
+          "Ex: 5214330719503783|10|2030|744|MASTERCARD|BANCO BTG PACTUAL SA|PLATINUM|"
         )
         .setRequired(true);
 
@@ -125,7 +129,7 @@ module.exports = {
         .setCustomId("preco")
         .setLabel("Preço do Cartão (R$)")
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder("Ex: 100")
+        .setPlaceholder("Ex: 40")
         .setRequired(true);
 
       modal.addComponents(
@@ -142,7 +146,7 @@ module.exports = {
       if (Object.keys(estoque).length === 0) {
         return interaction.reply({
           content: "Não tem nada para remover.",
-          ephemeral: true,
+          flags: 64,
         });
       }
 
@@ -161,7 +165,7 @@ module.exports = {
       return interaction.reply({
         content: "Selecione a categoria que deseja remover cartões:",
         components: [new ActionRowBuilder().addComponents(selectMenu)],
-        ephemeral: true,
+        flags: 64,
       });
     }
 
@@ -171,7 +175,7 @@ module.exports = {
         content: "Estoque completamente limpo.",
         embeds: [],
         components: [],
-        ephemeral: true,
+        flags: 64,
       });
     }
 
@@ -180,7 +184,7 @@ module.exports = {
       return interaction.reply({
         embeds: [criarEmbedEstoque(estoque)],
         components: [criarBotoesPainel()],
-        ephemeral: true,
+        flags: 64,
       });
     }
 
@@ -189,14 +193,16 @@ module.exports = {
         content: "Painel fechado.",
         embeds: [],
         components: [],
-        ephemeral: true,
+        flags: 64,
       });
     }
   },
 
+  // CORRIGIDO: NUNCA USE REPLY/DEFER ANTES DE SHOWMODAL
   async handleSelectMenu(interaction) {
     if (interaction.customId !== "select_categoria_remover") return;
 
+    // NUNCA reply/deferReply antes de showModal!
     const categoria = interaction.values[0];
     const estoqueAtual = lerEstoque();
     const cartoesDaCategoria = (estoqueAtual[categoria] || []).join("\n");
@@ -218,7 +224,7 @@ module.exports = {
       .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder("Remova as linhas dos cartões que deseja excluir")
       .setValue(cartoesDaCategoria)
-      .setRequired(false); // <-- Permite envio vazio
+      .setRequired(false);
 
     modal.addComponents(
       new ActionRowBuilder().addComponents(categoriaInput),
@@ -238,7 +244,7 @@ module.exports = {
         if (!categoria || !cartoesRaw || !preco) {
           return await interaction.reply({
             content: "Preencha todos os campos corretamente.",
-            ephemeral: true,
+            flags: 64,
           });
         }
 
@@ -250,21 +256,20 @@ module.exports = {
         const linhas = cartoesRaw
           .split("\n")
           .map((l) => l.trim())
-          .filter((l) => l.length > 5);
+          .filter((l) => l.length > 10);
 
         let adicionados = 0;
         for (const linha of linhas) {
-          // Sempre salva com 8 campos: level|R$ valor
           const partes = linha.split('|');
-          let cartaoCorrigido = linha;
-          if (partes.length === 7) {
-            cartaoCorrigido = linha + "|" + "R$ " + preco;
-          } else if (partes.length === 8) {
-            // já vem certo
+          let linhaFinal = linha;
+          if (partes.length === 9) {
+            linhaFinal = linha + "|" + preco;
+          } else if (partes.length === 10) {
+            // já tem preço, não faz nada
           } else {
-            continue; // ignora linhas quebradas/bagunçadas
+            continue;
           }
-          estoque[categoria].push(cartaoCorrigido);
+          estoque[categoria].push(linhaFinal);
           adicionados++;
         }
 
@@ -274,7 +279,7 @@ module.exports = {
 
         return await interaction.reply({
           content: `✅ ${adicionados} cartão(ões) adicionados na categoria **${categoria}** (total agora: ${totalCartoes}) com preço R$ ${preco}.`,
-          ephemeral: true,
+          flags: 64,
         });
       } else if (interaction.customId === "modal_remover") {
         const categoria = interaction.fields
@@ -284,7 +289,6 @@ module.exports = {
           .getTextInputValue("cartoes_remover")
           .trim();
 
-        // cartoesRaw pode ser vazio!
         cartoesRaw = sanitizeCartaoInput(cartoesRaw);
 
         let estoque = lerEstoque();
@@ -294,7 +298,7 @@ module.exports = {
           : cartoesRaw
               .split("\n")
               .map((l) => l.trim())
-              .filter((l) => l.length > 5);
+              .filter((l) => l.length > 10);
 
         if (novoArray.length === 0) {
           delete estoque[categoria];
@@ -308,14 +312,14 @@ module.exports = {
 
         return await interaction.reply({
           content: `✅ Estoque da categoria **${categoria}** atualizado com sucesso. Total agora: ${totalCartoes}`,
-          ephemeral: true,
+          flags: 64,
         });
       }
     } catch (e) {
       console.error("Erro no modal:", e);
       await interaction.reply({
         content: "Erro ao processar o modal.",
-        ephemeral: true,
+        flags: 64,
       });
     }
   },

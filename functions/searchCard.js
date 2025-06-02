@@ -1,43 +1,72 @@
-function transformarEstoque(rawEstoque) {
-  // rawEstoque: { categoria: [ "numero|mes|ano|cvv|bandeira|banco|level|preco", ... ] }
-  // Retorna array de objetos
-  const result = [];
-  for (const cat in rawEstoque) {
-    for (const linha of rawEstoque[cat]) {
-      const [numero, mes, ano, cvv, bandeira, banco, level, preco] = linha.split("|").map(s => s.trim());
-      result.push({ 
-        numero, mes, ano, cvv, bandeira, banco, level, preco: preco?.replace(/^R\$ ?/, '') || '', categoria: cat
-      });
-    }
-  }
-  return result;
-}
+const fs = require("fs");
+const path = require("path");
+
+const ESTOQUE_PATH = path.resolve(__dirname, "../estoque.json");
 
 function carregarEstoque() {
-  const fs = require('fs');
-  const path = require('path');
-  const estoquePath = path.resolve(__dirname, '../estoque.json');
-  if (!fs.existsSync(estoquePath))
-    fs.writeFileSync(estoquePath, JSON.stringify({}, null, 2));
-  return JSON.parse(fs.readFileSync(estoquePath, 'utf-8'));
+  if (!fs.existsSync(ESTOQUE_PATH)) fs.writeFileSync(ESTOQUE_PATH, JSON.stringify({}, null, 2));
+  return JSON.parse(fs.readFileSync(ESTOQUE_PATH, "utf-8"));
 }
 
-function filtrarCartoes(campo, valorBusca, estoque) {
-  // estoque: array de objetos já transformados
-  return estoque.filter(cartao => {
-    if (!cartao[campo]) return false;
-    return cartao[campo].toLowerCase().includes(valorBusca.toLowerCase());
-  });
+function transformarEstoque(estoque) {
+  // Transforma [{...}] em [{numero, mes, ano, cvv, bandeira, banco, level, nome, cpf, preco}]
+  const arr = [];
+  for (const categoria in estoque) {
+    for (const linha of estoque[categoria]) {
+      const partes = linha.split("|").map((s) => s.trim());
+      if (partes.length >= 9) {
+        arr.push({
+          numero: partes[0],
+          mes: partes[1],
+          ano: partes[2],
+          cvv: partes[3],
+          bandeira: partes[4],
+          banco: partes[5],
+          level: partes[6],
+          nome: partes[7],
+          cpf: partes[8],
+          preco: partes[9] || null,
+          categoria,
+        });
+      }
+    }
+  }
+  return arr;
 }
 
+// ... outras funções de pesquisa, filtro, mascarar etc.
 function mascararNumero(numero) {
-  if (!numero || numero.length < 8) return numero;
+  if (!numero) return "N/D";
   return numero.slice(0, 4) + " **** **** " + numero.slice(-4);
 }
 
+function filtrarCartoes(campo, valor, estoqueArr) {
+  valor = valor.toLowerCase();
+  return estoqueArr.filter((cartao) => {
+    if (cartao[campo]) {
+      return String(cartao[campo]).toLowerCase().includes(valor);
+    }
+    return false;
+  });
+}
+
+function removerCartaoDoEstoque(numeroCartao) {
+  const estoque = carregarEstoque();
+  let alterado = false;
+  for (const cat in estoque) {
+    const antes = estoque[cat].length;
+    // Remove só o cartão EXATO pelo número (pode ser melhorado)
+    estoque[cat] = estoque[cat].filter(linha => !linha.startsWith(numeroCartao + "|"));
+    if (estoque[cat].length < antes) alterado = true;
+  }
+  if (alterado) fs.writeFileSync(ESTOQUE_PATH, JSON.stringify(estoque, null, 2));
+  return alterado;
+}
+
 module.exports = {
-  transformarEstoque,
   carregarEstoque,
+  transformarEstoque,
   filtrarCartoes,
-  mascararNumero
+  mascararNumero,
+  removerCartaoDoEstoque,
 };
