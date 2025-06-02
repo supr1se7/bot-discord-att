@@ -85,8 +85,8 @@ async function enviarPainel(interaction) {
     )
     .setColor("#8a00ff")
     .setImage(
-      "https://media.discordapp.net/attachments/1376759989749813298/1378865998202933318/2025-06-01_18.38.00.jpg"
-    )
+  "https://cdn.discordapp.com/attachments/1376759989749813298/1378865998202933318/2025-06-01_18.38.00.jpg"
+)
     .setFooter({
       text: "ESTOQUE ATUALIZADO — COMPRE AGORA E GARANTA RESULTADOS",
     });
@@ -397,7 +397,10 @@ CLASSIC - R$ 25
       }
 
       try {
-        const pagamento = await criarPagamento(valorPagamento);
+       const pagamento = await criarPagamento(valorPagamento, {
+  nome: interaction.user.username,
+  email: `${interaction.user.id}@discord.user`
+});
 
         const embedPagamento = new EmbedBuilder()
           .setTitle("💸 PAGAMENTO GERADO")

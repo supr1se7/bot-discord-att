@@ -9,15 +9,33 @@ function getAuthHeader() {
   );
 }
 
-async function criarPagamento(valor) {
-  // valor: em reais (ex: 45 = R$45)
+async function criarPagamento(valor, usuario = {}) {
+  if (typeof valor !== 'number') valor = Number(valor);
+  if (isNaN(valor) || valor <= 0) {
+    throw new Error(`Valor inválido para pagamento: ${valor}`);
+  }
   const url = `${baseUrl}/transactions`;
   const payload = {
-    amount: valor, // Valor deve ser em reais (número inteiro)
+    amount: parseInt(valor, 10),
+    currency: "BRL",
     paymentMethod: "pix",
-    // Se precisar adicionar outros campos, coloque aqui
-    // ex: description: "Compra Legacy CC"
+    description: "Compra de Assinatura Premium",
+    reference: "compra_discord_" + Date.now(),
+    customer: {
+      name: usuario.nome || "Usuário Discord",
+      email: usuario.email || "discorduser@legacy.bot"
+    },
+    items: [
+      {
+        title: "Assinatura Premium",
+        quantity: 1,
+        tangible: false,
+        unitPrice: parseInt(valor, 10),
+        externalRef: "item-premium-" + Date.now()
+      }
+    ]
   };
+  console.log("Payload enviado para BlackPayments:", payload);
   const response = await fetch(url, {
     method: "POST",
     headers: {
@@ -27,7 +45,8 @@ async function criarPagamento(valor) {
     body: JSON.stringify(payload),
   });
   const data = await response.json();
-  if (!data.id || !data.pix || !data.pix.qrCode || !data.pix.code) {
+  console.log('BlackPayments response:', data);
+  if (!data.id || !data.pix || !data.pix.qrcode) {
     throw new Error(
       "Erro ao criar pagamento BlackPayments: " +
         (data.message || JSON.stringify(data))
@@ -35,8 +54,8 @@ async function criarPagamento(valor) {
   }
   return {
     id: data.id,
-    pixCopyPaste: data.pix.code,
-    pixUrl: data.pix.qrCode,
+    pixCopyPaste: data.pix.qrcode,
+    pixUrl: data.pix.secureUrl,
   };
 }
 
@@ -50,8 +69,7 @@ async function verificarPagamento(transactionId) {
     },
   });
   const data = await response.json();
-  // O status pago é "approved" (veja na resposta da API, ajuste se for diferente)
-  return data.status === "approved";
+  return data.status === "approved" || (data.data && data.data.status === "approved");
 }
 
 module.exports = { criarPagamento, verificarPagamento };
