@@ -214,11 +214,11 @@ module.exports = {
 
     const cartoesInput = new TextInputBuilder()
       .setCustomId("cartoes_remover")
-      .setLabel("Cartão(s) para atualizar (um por linha)")
+      .setLabel("(remova os que quer excluir)")
       .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder("Cole novamente os cartões que quer manter")
+      .setPlaceholder("Remova as linhas dos cartões que deseja excluir")
       .setValue(cartoesDaCategoria)
-      .setRequired(true);
+      .setRequired(false); // <-- Permite envio vazio
 
     modal.addComponents(
       new ActionRowBuilder().addComponents(categoriaInput),
@@ -284,27 +284,27 @@ module.exports = {
           .getTextInputValue("cartoes_remover")
           .trim();
 
-        if (!categoria || !cartoesRaw) {
-          return await interaction.reply({
-            content: "Preencha os campos corretamente.",
-            ephemeral: true,
-          });
-        }
-
+        // cartoesRaw pode ser vazio!
         cartoesRaw = sanitizeCartaoInput(cartoesRaw);
 
         let estoque = lerEstoque();
 
-        const novoArray = cartoesRaw
-          .split("\n")
-          .map((l) => l.trim())
-          .filter((l) => l.length > 5);
+        const novoArray = cartoesRaw.length === 0
+          ? []
+          : cartoesRaw
+              .split("\n")
+              .map((l) => l.trim())
+              .filter((l) => l.length > 5);
 
-        estoque[categoria] = novoArray;
+        if (novoArray.length === 0) {
+          delete estoque[categoria];
+        } else {
+          estoque[categoria] = novoArray;
+        }
 
         salvarEstoque(estoque);
 
-        const totalCartoes = estoque[categoria].length;
+        const totalCartoes = estoque[categoria] ? estoque[categoria].length : 0;
 
         return await interaction.reply({
           content: `✅ Estoque da categoria **${categoria}** atualizado com sucesso. Total agora: ${totalCartoes}`,

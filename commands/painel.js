@@ -70,59 +70,34 @@ function usuarioTemCompraPendente(userId) {
 
 // Mostra o painel fixo para sempre no canal (não ephemeral, qualquer um pode interagir)
 async function enviarPainel(interaction) {
-  const embedComprar = new EmbedBuilder()
-    .setTitle("CC FULL - FULL DADOS")
-    .setDescription(
-      `ENTREGA AUTOMÁTICA
+ const embedComprar = new EmbedBuilder()
+  .setTitle("‎Bem-vindo à Legacy CC's")
+  .setDescription(
+    `👏 | Pioneiros na venda direta de CC's exclusivos de alta qualidade, sem retestes.
+💳 | Material de alta qualidade a preços acessíveis.
+👨‍💻 | Cartões verificados no momento da compra.
+👍 | Garantia de cartões live, com troca em até 10 minutos.
 
-Referências todos os dias. Qualidade e confiança são o lema.  
-Material testado no ato da compra.
-
-────────────────────────────
-CLASSIC - R$ 25  
-Garantia até R$ 300
-
-STANDARD - R$ 30  
-Garantia até R$ 400
-
-GOLD - R$ 35  
-Garantia até R$ 500
-
-PLATINUM - R$ 40  
-Garantia até R$ 650
-
-ELO - R$ 40
-Garantia até R$ 650
-
-INFINITE - R$ 60  
-Garantia até R$ 1.000
-
-BLACK - R$ 60  
-Garantia até R$ 1.000
-
-AMEX - R$ 80
-Garantia até R$ 2.000
-────────────────────────────
-
-Prazo de troca: 10 minutos após a compra.  
-Garantimos live, Garantimos saldo.  
-Todo material é testado no momento da entrega.
-
-LEGACY STORE — compromisso com a excelência.`
-    )
-    .setColor("#8a00ff")
-    .setImage(
-      "https://cdn.discordapp.com/attachments/1376730692011950124/1377478182621413396/banner.png",
-    )
-    .setFooter({
-      text: "ESTOQUE ATUALIZADO — COMPRE AGORA E GARANTA RESULTADOS",
-    });
+🎖 | Acompanhe diretamente nossas referências: <#1375627890556801109>
+💬 | Caso necessite de alguma ajuda, abra ticket <#1375627890556801108>**`
+  )
+  .setColor("#8a00ff")
+  .setImage(
+    "https://media.discordapp.net/attachments/1376759989749813298/1378865998202933318/2025-06-01_18.38.00.jpg?ex=683e2888&is=683cd708&hm=bac1a9423b1eec683d202026536dec9ed8809f101e8042d0dcf3c5240a95540e&=&format=webp",
+  )
+  .setFooter({
+    text: "ESTOQUE ATUALIZADO — COMPRE AGORA E GARANTA RESULTADOS",
+  });
 
   const rowComprar = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId("abrir_compras")
       .setLabel("🛒 Comprar Cartão")
-      .setStyle(ButtonStyle.Success)
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId("termos_troca")
+      .setLabel("📜 Termos de Troca")
+      .setStyle(ButtonStyle.Secondary)
   );
 
   await interaction.channel.send({
@@ -156,45 +131,94 @@ module.exports = {
   },
 
   // Botão principal do painel
-  async handleButton(interaction) {
-    if (interaction.customId === "abrir_compras") {
-      // Abre o menu de pesquisa para o usuário (ephemeral)
-      const embedPesquisa = new EmbedBuilder()
-        .setTitle("🔍 PAINEL DE PESQUISA CC FULL")
-        .setDescription(
-          `✅ Pesquisar por BIN  
-✅ Pesquisar por Banco  
-✅ Pesquisar por Bandeira  
-✅ Pesquisar por Level  
-✅ Unitárias (compra uma CC aleatória por categoria)`
-        )
-        .setColor("#8a00ff")
-        .setThumbnail("https://i.imgur.com/E8G1n6b.png")
-        .setFooter({
-          text: "Use com responsabilidade. Garantia conforme descrito acima.",
-        });
+async handleButton(interaction) {
+  if (interaction.customId === "abrir_compras") {
+    const embedPesquisa = new EmbedBuilder()
+      .setTitle("🔍 Comprar CC Unitária")
+      .setDescription(
+        `🏷 Tabela de Preços
 
-      const menuPesquisa = new StringSelectMenuBuilder()
-        .setCustomId("menu_painel")
-        .setPlaceholder("Selecione um método de pesquisa")
-        .addOptions([
-          { label: "Pesquisar por BIN", value: "pesquisar_bin" },
-          { label: "Pesquisar por Banco", value: "pesquisar_banco" },
-          { label: "Pesquisar por Bandeira", value: "pesquisar_bandeira" },
-          { label: "Pesquisar por Level", value: "pesquisar_level" },
-          { label: "Unitárias", value: "unitarias" },
-        ]);
-
-      const rowPesquisa = new ActionRowBuilder().addComponents(menuPesquisa);
-
-      await interaction.reply({
-        embeds: [embedPesquisa],
-        components: [rowPesquisa],
-        ephemeral: true,
+AMEX - R$ 80
+INFINITE - R$ 60
+BLACK - R$ 60
+BUSINESS - R$ 40
+PLATINUM - R$ 40
+GOLD - R$ 35
+STANDARD - R$ 30
+CLASSIC - R$ 25
+`
+      )
+      .setColor("#8a00ff")
+      .setThumbnail("https://media.discordapp.net/attachments/1376759989749813298/1378876103019597874/photo_2025-05-23_19.12.42.jpeg?ex=683e31f1&is=683ce071&hm=5fec7708f9218425174a7bf8791e5fcb25f988f05700624955d523d46bc36f43&=&format=webp")
+      .setFooter({
+        text: "Selecione uma categoria para comprar CC.",
       });
-      return true;
-    }
 
+    const menuPesquisa = new StringSelectMenuBuilder()
+      .setCustomId("menu_painel")
+      .setPlaceholder("Selecione um método de pesquisa")
+      .addOptions([
+        {
+          label: "Pesquisar por BIN",
+          value: "pesquisar_bin",
+          emoji: "🔢"
+        },
+        {
+          label: "Pesquisar por Banco",
+          value: "pesquisar_banco",
+          emoji: "🏦"
+        },
+        {
+          label: "Pesquisar por Bandeira",
+          value: "pesquisar_bandeira",
+          emoji: "🇧🇷"
+        },
+        {
+          label: "Pesquisar por Level",
+          value: "pesquisar_level",
+          emoji: "🥇"
+        },
+        {
+          label: "Unitárias",
+          value: "unitarias",
+          emoji: "💳"
+        }
+      ]);
+
+    const rowPesquisa = new ActionRowBuilder().addComponents(menuPesquisa);
+
+    await interaction.reply({
+      embeds: [embedPesquisa],
+      components: [rowPesquisa],
+      ephemeral: true,
+    });
+    return true;
+  }
+
+if (interaction.customId === "termos_troca") {
+  const embedTermos = new EmbedBuilder()
+    .setTitle("📜 Termos de Troca & Garantia")
+    .setDescription(
+      `Você precisa enviar um vídeo mostrando:
+• A data e hora no site da Magalu ou Tramontina;
+• A tentativa de compra de um produto até R$150;
+• Tudo isso dentro do prazo de 10 minutos após a liberação da info.
+
+Importante:
+
+Se o vídeo ou o contato não forem enviados dentro do prazo, não será feita a troca.
+
+Compre apenas se estiver de acordo com essas condições. Caso contrário, por favor, não compre!
+
+**💬 | Caso necessite de alguma ajuda, abra ticket <#1375627890556801108>**`
+    )
+    .setColor("#8a00ff");
+  await interaction.reply({
+    embeds: [embedTermos],
+    ephemeral: true,
+  });
+  return true;
+}
     // O resto do fluxo mantém igual (cancelar compra, etc)
     if (interaction.customId === "cancelar_compra") {
       const pendente = pagamentosPendentes.get(interaction.user.id);
@@ -233,23 +257,26 @@ module.exports = {
         const rawEstoque = await carregarEstoque();
         const categorias = Object.keys(rawEstoque);
 
-        const tabelaPrecos = `
-**Tabela de Preços Unitários**
-CLASSIC - R$ 25
-STANDARD - R$ 30
-GOLD - R$ 35
-PLATINUM - R$ 40
-ELO - R$ 40
+const tabelaPrecos = `
+🏷 Tabela de Preços
+
+AMEX - R$ 80
 INFINITE - R$ 60
 BLACK - R$ 60
-AMEX - R$ 80
+BUSINESS - R$ 40
+PLATINUM - R$ 40
+GOLD - R$ 35
+STANDARD - R$ 30
+CLASSIC - R$ 25
+
+
 `;
 
-        const embedUnitarias = new EmbedBuilder()
-          .setTitle("💳 Cartões Unitários - Escolha a Categoria")
-          .setDescription(tabelaPrecos)
-          .setColor("#8a00ff")
-          .setFooter({ text: "Selecione uma categoria para comprar 1 cartão aleatório." });
+const embedUnitarias = new EmbedBuilder()
+  .setTitle("💳 Comprar CC Unitária")
+  .setDescription(tabelaPrecos)
+  .setColor("#8a00ff")
+  .setFooter({ text: "Selecione uma categoria para comprar CC." });
 
         const selectCategorias = new StringSelectMenuBuilder()
           .setCustomId("unitarias_categoria")
