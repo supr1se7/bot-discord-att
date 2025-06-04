@@ -77,8 +77,12 @@ async function verificarPagamento(transactionId) {
     },
   });
   const data = await response.json();
-  console.log("[Pix DEBUG] Status completo recebido:", data); // ADICIONADO LOG DETALHADO!
-  return data.status === "approved" || (data.data && data.data.status === "approved");
+  console.log("[Pix DEBUG] Status completo recebido:", data);
+  return (
+    data.status === "approved" ||
+    data.status === "paid" ||
+    (data.data && (data.data.status === "approved" || data.data.status === "paid"))
+  );
 }
 
 module.exports = { criarPagamento, verificarPagamento };

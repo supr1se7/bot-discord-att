@@ -27,7 +27,7 @@ module.exports = {
 
   async execute(interaction) {
     const valor = interaction.options.getInteger("valor");
-    const cliente = interaction.options.getUser("cliente") || interaction.user;
+    const cliente = interaction.options.getUser("cliente");
 
     if (!valor || valor < 1) {
       await interaction.reply({ content: "Informe um valor válido!", ephemeral: true });
@@ -39,8 +39,8 @@ module.exports = {
     try {
       // Gera pagamento
       const pagamento = await criarPagamento(valor, {
-        nome: cliente.username,
-        email: `${cliente.id}@discord.user`
+        nome: cliente ? cliente.username : "Usuário Discord",
+        email: cliente ? `${cliente.id}@discord.user` : "discorduser@legacy.bot"
       });
 
       // Embed inicial
@@ -79,7 +79,7 @@ module.exports = {
         try {
           if (pagoConfirmado) return;
           const isPaid = await verificarPagamento(pagamento.id);
-          console.log(`[Pix DEBUG] Checando pagamento ${pagamento.id} | Status: ${isPaid} | Tempo passado: ${tempoPassado/1000}s`);
+          console.log(`[Pix DEBUG] Checando pagamento ${pagamento.id} | Status: ${isPaid} | Tempo passado: ${tempoPassado / 1000}s`);
 
           if (isPaid) {
             pagoConfirmado = true;
@@ -87,7 +87,7 @@ module.exports = {
             console.log("[Pix DEBUG] Pagamento APROVADO:", pagamento.id);
 
             await interaction.followUp({
-              content: `✅ **O cliente pagou com sucesso! <@${cliente.id}> pode receber a entrega do produto!**`,
+              content: `✅ **O pagamento foi confirmado! Clique no botão abaixo para setar o cargo de comprador para o cliente.**`,
               ephemeral: false
             });
 
@@ -120,8 +120,8 @@ module.exports = {
               // Apaga as mensagens do QR code e Pix copia/cola
               try {
                 const channel = interaction.channel;
-                if (qrMsg) await channel.messages.delete(qrMsg.id).catch(() => {});
-                if (pixMsg) await channel.messages.delete(pixMsg.id).catch(() => {});
+                if (qrMsg) await channel.messages.delete(qrMsg.id).catch(() => { });
+                if (pixMsg) await channel.messages.delete(pixMsg.id).catch(() => { });
               } catch (e) {
                 console.error("[Pix DEBUG] Erro ao apagar mensagens Pix expirado:", e);
               }
@@ -156,16 +156,16 @@ module.exports = {
         fetchReply: true
       });
 
-      // Cria um collector para aguardar a resposta do admin no chat (apenas dele, por 60s)
+      // Cria um coletor para pegar a próxima mensagem DO ADMIN (apenas dele, por tempo maior)
+      const channel = interaction.channel;
+      const adminId = interaction.user.id;
+
       const filter = m =>
-        m.author.id === interaction.user.id &&
+        m.author.id === adminId &&
         (m.mentions.users.size > 0 || /^\d+$/.test(m.content.trim()));
 
-      const collector = interaction.channel.createMessageCollector({
-        filter,
-        max: 1,
-        time: 60000
-      });
+      // Aumenta o tempo para 10 minutos (600_000 ms)
+      const collector = channel.createMessageCollector({ filter, max: 1, time: 600000 });
 
       collector.on("collect", async m => {
         let clienteId = null;
