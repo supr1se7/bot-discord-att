@@ -7,6 +7,7 @@ module.exports = {
         if (command) await command.execute(interaction, client);
       }
       else if (interaction.isButton()) {
+        // PAINEL - Prioridade
         const painelCmd = client.commands.get('painel');
         if (painelCmd && typeof painelCmd.handleButton === 'function') {
           try {
@@ -16,11 +17,20 @@ module.exports = {
             console.error('Erro no painel.handleButton:', e);
           }
         }
+        // ESTOQUE
         const estoqueCmd = client.commands.get('estoque');
         if (estoqueCmd && typeof estoqueCmd.handleButton === 'function') {
-          await estoqueCmd.handleButton(interaction, client);
+          const handled = await estoqueCmd.handleButton(interaction, client);
+          if (handled) return;
+        }
+        // GERAR - novo bloco, para lidar com o botão de setar cargo
+        const gerarCmd = client.commands.get('gerar');
+        if (gerarCmd && typeof gerarCmd.handleButton === 'function') {
+          const handled = await gerarCmd.handleButton(interaction, client);
+          if (handled) return;
         }
       }
+      // ... resto igual
       else if (interaction.isModalSubmit()) {
         const painelCmd = client.commands.get('painel');
         if (painelCmd && typeof painelCmd.handleModal === 'function') {
@@ -45,7 +55,7 @@ module.exports = {
         if (painelCmd && typeof painelCmd.handleSelect === 'function') {
           try {
             const handled = await painelCmd.handleSelect(interaction, client);
-            if (handled) return; // <-- SÓ chama estoque se painel NÃO lidou!
+            if (handled) return;
           } catch (e) {
             console.error('Erro no painel.handleSelect:', e);
           }

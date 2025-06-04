@@ -73,7 +73,7 @@ function primeiros6(numero) {
 
 async function enviarPainel(interaction) {
   const embedComprar = new EmbedBuilder()
-    .setTitle("‎Bem-vindo à Legacy CC's")
+    .setTitle("Bem-vindo à Legacy CC's")
     .setDescription(
       `👏 | Pioneiros na venda direta de CC's exclusivos de alta qualidade, sem retestes.
 💳 | Material de alta qualidade a preços acessíveis.
@@ -85,8 +85,8 @@ async function enviarPainel(interaction) {
     )
     .setColor("#8a00ff")
     .setImage(
-  "https://cdn.discordapp.com/attachments/1376759989749813298/1378865998202933318/2025-06-01_18.38.00.jpg"
-)
+      "https://media.discordapp.net/attachments/1376705206913339493/1379221887141286078/2025-06-01_18.38.00.jpg?ex=683f73fa&is=683e227a&hm=6a00306abd68c697a089fe26f662214b26bcc9ccb4c00a8b937a62b62c180a13&=&format=webp"
+    )
     .setFooter({
       text: "ESTOQUE ATUALIZADO — COMPRE AGORA E GARANTA RESULTADOS",
     });
@@ -134,6 +134,18 @@ module.exports = {
 
   async handleButton(interaction) {
     if (interaction.customId === "abrir_compras") {
+      // Checa estoque global antes de mostrar painel de categorias
+      const rawEstoque = await carregarEstoque();
+      const categorias = Object.keys(rawEstoque);
+      const totalCartoes = categorias.reduce((acc, cat) => acc + (rawEstoque[cat]?.length || 0), 0);
+      if (!categorias.length || totalCartoes === 0) {
+        await interaction.reply({
+          content: "❌ No momento, não há cartões disponíveis no estoque. Tente novamente mais tarde.",
+          flags: 64,
+        });
+        return true;
+      }
+
       const embedPesquisa = new EmbedBuilder()
         .setTitle("🔍 Comprar CC Unitária")
         .setDescription(
@@ -152,7 +164,7 @@ CLASSIC - R$ 25
         .setColor("#8a00ff")
         .setThumbnail("https://media.discordapp.net/attachments/1376759989749813298/1378876103019597874/photo_2025-05-23_19.12.42.jpeg")
         .setFooter({
-          text: "Selecione uma categoria para comprar CC.",
+          text: "Selecione um método de pesquisa ou categoria para comprar CC.",
         });
 
       const menuPesquisa = new StringSelectMenuBuilder()
@@ -281,6 +293,18 @@ Compre apenas se estiver de acordo com essas condições. Caso contrário, por f
     // MODAL de pesquisa detalhada (BIN, Banco, Bandeira, Level)
     if (interaction.customId === "menu_painel") {
       const escolha = interaction.values[0];
+
+      // Checa estoque global antes de abrir qualquer pesquisa
+      const rawEstoque = await carregarEstoque();
+      const totalCartoes = Object.values(rawEstoque).reduce((acc, arr) => acc + (arr?.length || 0), 0);
+      if (!totalCartoes) {
+        await interaction.reply({
+          content: "❌ Nenhum cartão disponível no estoque para pesquisa.",
+          flags: 64,
+        });
+        return true;
+      }
+
       if (
         escolha === "pesquisar_bin" ||
         escolha === "pesquisar_banco" ||
@@ -326,8 +350,23 @@ Compre apenas se estiver de acordo com essas condições. Caso contrário, por f
         if (!interaction.deferred && !interaction.replied) {
           await interaction.deferReply({ flags: 64 });
         }
-        const rawEstoque = await carregarEstoque();
         const categorias = Object.keys(rawEstoque);
+
+        if (!categorias.length) {
+          await interaction.editReply({
+            content: "❌ Não há categorias disponíveis no estoque no momento.",
+          });
+          return true;
+        }
+
+        // Checa se todas categorias estão vazias
+        const disponivel = categorias.some(cat => (rawEstoque[cat] && rawEstoque[cat].length > 0));
+        if (!disponivel) {
+          await interaction.editReply({
+            content: "❌ Não há cartões disponíveis em nenhuma categoria neste momento.",
+          });
+          return true;
+        }
 
         const tabelaPrecos = `
 🏷 Tabela de Preços
@@ -383,7 +422,7 @@ CLASSIC - R$ 25
       const rawEstoque = await carregarEstoque();
       const cardsDaCategoria = rawEstoque[categoria] || [];
       if (!cardsDaCategoria.length) {
-        await interaction.editReply({ content: "Não há cartões disponíveis nessa categoria." });
+        await interaction.editReply({ content: "❌ Não há cartões disponíveis nessa categoria." });
         return true;
       }
 
@@ -397,10 +436,10 @@ CLASSIC - R$ 25
       }
 
       try {
-       const pagamento = await criarPagamento(valorPagamento, {
-  nome: interaction.user.username,
-  email: `${interaction.user.id}@discord.user`
-});
+        const pagamento = await criarPagamento(valorPagamento, {
+          nome: interaction.user.username,
+          email: `${interaction.user.id}@discord.user`
+        });
 
         const embedPagamento = new EmbedBuilder()
           .setTitle("💸 PAGAMENTO GERADO")
@@ -477,6 +516,15 @@ CLASSIC - R$ 25
             pendente.pago = true;
             clearTimeout(pendente.timeoutId);
             removerCartaoDoEstoque(cardObj.numero);
+            await darCargoComprador(interaction);
+            await logAdmin(
+              interaction,
+              new EmbedBuilder()
+                .setTitle("✅ Pagamento aprovado e cartão entregue")
+                .setDescription(`Usuário <@${interaction.user.id}> recebeu o cartão após pagamento via Pix.`)
+                .setColor("#43e660")
+                .setTimestamp()
+            );
             await interaction.followUp({
               content:
                 `💳 **Pagamento confirmado! Aqui estão os detalhes completos do seu cartão:**\n\n` +
@@ -615,6 +663,15 @@ CLASSIC - R$ 25
             pendente.pago = true;
             clearTimeout(pendente.timeoutId);
             removerCartaoDoEstoque(cardObj.numero);
+            await darCargoComprador(interaction);
+            await logAdmin(
+              interaction,
+              new EmbedBuilder()
+                .setTitle("✅ Pagamento aprovado e cartão entregue")
+                .setDescription(`Usuário <@${interaction.user.id}> recebeu o cartão após pagamento via Pix.`)
+                .setColor("#43e660")
+                .setTimestamp()
+            );
             await interaction.followUp({
               content:
                 `💳 **Pagamento confirmado! Aqui estão os detalhes completos do seu cartão:**\n\n` +
@@ -697,6 +754,14 @@ CLASSIC - R$ 25
 
       const rawEstoque = await carregarEstoque();
       const estoque = transformarEstoque(rawEstoque);
+
+      if (!estoque.length) {
+        await interaction.editReply({
+          content: "❌ Nenhum cartão disponível para pesquisa nesse momento.",
+        });
+        return true;
+      }
+
       const resultados = filtrarCartoes(campo, valorBusca, estoque);
 
       pesquisasPendentes.set(interaction.user.id, { resultados });

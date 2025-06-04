@@ -9,14 +9,22 @@ function getAuthHeader() {
   );
 }
 
+/**
+ * Cria um pagamento Pix na BlackPayments
+ * valor: valor em reais (ex: 45 para R$45,00)
+ */
 async function criarPagamento(valor, usuario = {}) {
   if (typeof valor !== 'number') valor = Number(valor);
   if (isNaN(valor) || valor <= 0) {
     throw new Error(`Valor inválido para pagamento: ${valor}`);
   }
+
+  // Converte valor de reais para centavos
+  const valorCentavos = Math.round(valor * 100);
+
   const url = `${baseUrl}/transactions`;
   const payload = {
-    amount: parseInt(valor, 10),
+    amount: valorCentavos,
     currency: "BRL",
     paymentMethod: "pix",
     description: "Compra de Assinatura Premium",
@@ -30,7 +38,7 @@ async function criarPagamento(valor, usuario = {}) {
         title: "Assinatura Premium",
         quantity: 1,
         tangible: false,
-        unitPrice: parseInt(valor, 10),
+        unitPrice: valorCentavos,
         externalRef: "item-premium-" + Date.now()
       }
     ]
@@ -69,6 +77,7 @@ async function verificarPagamento(transactionId) {
     },
   });
   const data = await response.json();
+  console.log("[Pix DEBUG] Status completo recebido:", data); // ADICIONADO LOG DETALHADO!
   return data.status === "approved" || (data.data && data.data.status === "approved");
 }
 
